@@ -1,4 +1,4 @@
-package br.com.gotennis.app;
+package br.com.gotennis.gotennis;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
