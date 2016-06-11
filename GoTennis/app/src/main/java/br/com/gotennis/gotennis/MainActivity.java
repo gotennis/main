@@ -14,11 +14,27 @@ import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.gson.GsonBuilder;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
+
+import br.com.gotennis.gotennis.async.FacebookService;
 
 
 public class MainActivity extends ActionBarActivity {
 
     private TextView info;
+    private TextView saveStatus;
     private LoginButton loginButton;
     private CallbackManager callbackManager;
 
@@ -29,27 +45,36 @@ public class MainActivity extends ActionBarActivity {
         callbackManager = CallbackManager.Factory.create();
         setContentView(R.layout.activity_main);
         info = (TextView)findViewById(R.id.info);
+        saveStatus = (TextView)findViewById(R.id.saveStatus);
         loginButton = (LoginButton)findViewById(R.id.login_button);
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 info.setText(
+
+
                         "User ID: "
                                 + loginResult.getAccessToken().getUserId()
                                 + "\n" +
-                                "Auth Token: "
+                                "Auth Token teste: "
                                 + loginResult.getAccessToken().getToken()
                 );
+                if (makeGetRequest()) {
+                    saveStatus.setText("WS successfully called");
+                } else {
+                    saveStatus.setText("Deu merda de novo");
+                }
             }
 
             @Override
             public void onCancel() {
                 info.setText("Cancelou a porrinha?");
+                execute();
             }
 
             @Override
             public void onError(FacebookException e) {
-                info.setText("Deu zica na bagaça");
+                info.setText(e.getMessage());
             }
         });
     }
@@ -95,5 +120,23 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    public static Boolean execute() {
+        Map<String, String> comment = new HashMap<String, String>();
+        comment.put("subject", "Using the GSON library");
+        comment.put("message", "Using libraries is convenient.");
+        String json = new GsonBuilder().create().toJson(comment, Map.class);
+        return makeGetRequest();
+    }
+
+    public static Boolean makeGetRequest() {
+        Boolean executed = false;
+        try {
+            executed = new FacebookService().execute().get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return executed;
     }
 }
